@@ -35,7 +35,7 @@ const controller = {
 				validator.isAlpha(tDefinition);
 
 			console.log(validatorEWord);
-		} catch (error) {
+		} catch (err) {
 			return res.status(200).send({
 				status: 'error',
 				message: 'Faltan datos por enviar',
@@ -53,8 +53,8 @@ const controller = {
 			entryItem.eType = pType;
 
 			// Guardar
-			entryItem.save((error, entryStored) => {
-				if (error || !entryStored) {
+			entryItem.save((err, entryStored) => {
+				if (err || !entryStored) {
 					return res.status(404).send({
 						status: 'error',
 						message: 'Los datos no se han guardado',
@@ -81,27 +81,27 @@ const controller = {
 		// --------------------------
 		// Parametros para la query de listar
 
-		var PAGE = req.params.page;
+		var pageNum = req.params.page;
 
-		if (!validator.isNumeric(PAGE)) {
-			PAGE = 0;
+		if (!validator.isNumeric(pageNum)) {
+			pageNum = 0;
 		}
 
-		var RES_PER_PAGE = 5;
-		var SKIP = 0;
-		var LIMIT = 0;
+		var resPerPage = 5;
+		var skipEntries = 0;
+		var limitEntries = 0;
 
-		if (PAGE) {
-			SKIP = RES_PER_PAGE * PAGE - RES_PER_PAGE;
-			LIMIT = RES_PER_PAGE;
+		if (pageNum) {
+			skipEntries = resPerPage * pageNum - resPerPage;
+			limitEntries = resPerPage;
 		}
 
 		// Find
 		entryModel
 			.find({})
 			.sort('-id')
-			.skip(SKIP)
-			.limit(LIMIT)
+			.skip(skipEntries)
+			.limit(limitEntries)
 			.exec((err, entries) => {
 				if (err) {
 					return res.status(500).send({
@@ -125,11 +125,53 @@ const controller = {
 	},
 
 	// OBTENER UN SOLO ELEMENTO/ENTRADA
-
 	getEntry: (req, res) => {
-		return res.status(200).send({
-			status: 'success',
-			message: 'Un solo elemento',
+
+		// Obtener el id de la entrada de la url
+		var entryId = req.params.id;
+
+		// Comprobar que existe
+		if (!entryId || entryId == null) {
+			return res.status(404).send({
+				status: 'error',
+				message: 'No existe la entrada',
+			});
+		}
+
+		// Buscar la entrada
+		entryModel.findById(entryId, (err, entry) => {
+			if (err || !entry) {
+				return res.status(404).send({
+					status: 'error',
+					message: 'No existe la entrada',
+				});
+			}
+
+			// Devolver la entrada en json
+			return res.status(200).send({
+				status: 'success',
+				entry,
+			});
+		});
+	},
+
+	// ACTUALIZAR UN ELEMENTO/ENTRADA
+	update: (req, res) => {
+
+		// Obtener el id de la entrada de la url
+		var entryId = req.params.id;
+
+		// Recoger los datos que llega por put
+
+		// Validar los datos
+
+		// Actualizar la entrada (find anda update)
+
+		// Devolver la entrada actualizada en json
+
+		return res.status(404).send({
+			status: 'error',
+			message: 'Actualizar una entrada',
 		});
 	},
 };

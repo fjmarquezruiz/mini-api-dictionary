@@ -12,5 +12,7 @@ const router = express.Router();
 // Rutas
 router.post('/save', entryController.save);
 router.get('/entries/:page?', entryController.getEntries);
+router.get('/entry/:id', entryController.getEntry);
+router.put('/entry/:id', entryController.update);
 
 module.exports = router;
