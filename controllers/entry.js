@@ -209,7 +209,8 @@ const controller = {
 					if (!entryUpdated) {
 						return res.status(404).send({
 							status: 'error',
-							message: 'La entrada no se actualizado, posiblemente no exista',
+							message:
+								'La entrada no se actualizado, posiblemente no exista',
 						});
 					}
 
@@ -235,26 +236,67 @@ const controller = {
 		var entryId = req.params.id;
 
 		// Borrar la entrada (find and delete)
-		entryModel.findOneAndDelete({_id: entryId}, (err, entryDeleted) => {
-			if(err) {
+		entryModel.findOneAndDelete({ _id: entryId }, (err, entryDeleted) => {
+			if (err) {
 				return res.status(500).send({
 					status: 'error',
 					message: 'Error al borrar',
 				});
 			}
 
-			if(!entryDeleted) {
+			if (!entryDeleted) {
 				return res.status(404).send({
 					status: 'error',
-					message: 'No se ha borrado la entrada, posiblemente no exista',
+					message:
+						'No se ha borrado la entrada, posiblemente no exista',
 				});
 			}
 
+			// Devolver la entrada borrada en json
 			return res.status(200).send({
 				status: 'success',
 				entry: entryDeleted,
 			});
 		});
+	},
+
+	// ----------------------------------------------------------------------------------------
+	// BUSCAR UN ELEMENTO/ENTRADA
+	search: (req, res) => {
+		// Sacar el string a buscar
+		var searchString = req.params.search;
+
+		// Buscar la entrada (find or)
+		entryModel
+			.find({
+				$or: [
+					{ eWord: { $regex: searchString, $options: 'i' } },
+					{ eDefinition: { $regex: searchString, $options: 'i' } },
+				],
+			})
+			.sort([['date', 'descending']])
+			.exec((err, entries) => {
+				if (err) {
+					return res.status(500).send({
+						status: 'error',
+						message: 'Error al buscar',
+					});
+				}
+
+				if (!entries || entries.length <= 0) {
+					return res.status(404).send({
+						status: 'error',
+						message:
+							'No hay entradas que coincidan con la búsqueda',
+					});
+				}
+
+				// Devolver las entradas buscadas en json
+				return res.status(200).send({
+					status: 'success',
+					entry: entries,
+				});
+			});
 	},
 };
 

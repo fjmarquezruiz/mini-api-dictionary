@@ -15,5 +15,6 @@ router.get('/entries/:page?', entryController.getEntries);
 router.get('/entry/:id', entryController.getEntry);
 router.put('/entry/:id', entryController.update);
 router.delete('/entry/:id', entryController.delete);
+router.get('/search/:search', entryController.search);
 
 module.exports = router;
