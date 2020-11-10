@@ -126,7 +126,6 @@ const controller = {
 
 	// OBTENER UN SOLO ELEMENTO/ENTRADA
 	getEntry: (req, res) => {
-
 		// Obtener el id de la entrada de la url
 		var entryId = req.params.id;
 
@@ -157,22 +156,66 @@ const controller = {
 
 	// ACTUALIZAR UN ELEMENTO/ENTRADA
 	update: (req, res) => {
-
 		// Obtener el id de la entrada de la url
 		var entryId = req.params.id;
 
 		// Recoger los datos que llega por put
+		var params = req.body;
+
+		const pWord = params.eWord;
+		const pDefinition = params.eDefinition;
+		const pPronunciation = params.ePronunciation;
+		const pType = params.eType;
+		// eTags: [String],
+
+		console.log(params);
 
 		// Validar los datos
+		try {
+			// Quitar espacios temporalmente
+			let tWord = pWord.replace(/\s+/g, '');
+			let tDefinition = pDefinition.replace(/\s+/g, '');
 
-		// Actualizar la entrada (find anda update)
+			var validatorEWord =
+				!validator.isEmpty(pWord) && validator.isAlpha(tWord);
+			// var validatorEWord = !validator.isEmpty(pWord);
+			var validatorEDefinition =
+				!validator.isEmpty(pDefinition) &&
+				validator.isAlpha(tDefinition);
+		} catch (err) {
+			return res.status(200).send({
+				status: 'error',
+				message: 'Faltan datos por enviar',
+			});
+		}
 
-		// Devolver la entrada actualizada en json
+		if (validatorEWord && validatorEDefinition) {
+			// Actualizar la entrada (find anda update)
+			entryModel.findOneAndUpdate(
+				{ _id: entryId },
+				params,
+				{ new: true },
+				(err, entryUpdated) => {
+					if (err || !entryUpdated) {
+						return res.status(404).send({
+							status: 'error',
+							message: 'La entrada no se actualizado',
+						});
+					}
 
-		return res.status(404).send({
-			status: 'error',
-			message: 'Actualizar una entrada',
-		});
+					// Devolver la entrada actualizada en json
+					return res.status(200).send({
+						status: 'success',
+						entry: entryUpdated,
+					});
+				}
+			);
+		} else {
+			return res.status(200).send({
+				status: 'error',
+				message: 'Los datos no son válidos',
+			});
+		}
 	},
 };
 
