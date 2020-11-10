@@ -5,10 +5,10 @@ const fs = require('fs');
 const path = require('path');
 const entryModel = require('../models/entry');
 
-console.log(entryModel);
-
 const controller = {
 	// Controladores
+
+	// SALVAR UNA ENTRADA DEL DICCIONARIO
 	save: (req, res) => {
 		// Recoger datos
 		const params = req.body;
@@ -23,19 +23,20 @@ const controller = {
 
 		// Validar datos
 		try {
-
 			// Quitar espacios temporalmente
 			let tWord = pWord.replace(/\s+/g, '');
 			let tDefinition = pDefinition.replace(/\s+/g, '');
 
-			var validatorEWord = !validator.isEmpty(pWord) && validator.isAlpha(tWord);
+			var validatorEWord =
+				!validator.isEmpty(pWord) && validator.isAlpha(tWord);
 			// var validatorEWord = !validator.isEmpty(pWord);
-			var validatorEDefinition = !validator.isEmpty(pDefinition) && validator.isAlpha(tDefinition);
+			var validatorEDefinition =
+				!validator.isEmpty(pDefinition) &&
+				validator.isAlpha(tDefinition);
 
 			console.log(validatorEWord);
-
 		} catch (error) {
-			res.status(200).send({
+			return res.status(200).send({
 				status: 'error',
 				message: 'Faltan datos por enviar',
 			});
@@ -54,80 +55,82 @@ const controller = {
 			// Guardar
 			entryItem.save((error, entryStored) => {
 				if (error || !entryStored) {
-					res.status(404).send({
+					return res.status(404).send({
 						status: 'error',
 						message: 'Los datos no se han guardado',
 					});
 				}
 
 				// Devolver una respuesta
-				res.status(200).send({
+				return res.status(200).send({
 					status: 'success',
 					entry: entryStored,
 				});
 			});
 		} else {
-			res.status(200).send({
+			return res.status(200).send({
 				status: 'error',
 				message: 'Los datos no son válidos',
 			});
 		}
 	},
 
-	save3: (req, res) => {
-		// Recoger los parametros por post
-		var params = req.body;
-		console.log(params);
+	// LISTAR TODAS LAS ENTRADAS DEL DICCIONARIO
+	// SI SE LE PASA UN NUMERO ES UNA PAGINACIÓN
+	getEntries: (req, res) => {
+		// --------------------------
+		// Parametros para la query de listar
 
-		// Validar datos con la libreria validator
-		try {
-			var validateTitle = !validator.isEmpty(params.eWord);
-			var validateContent = !validator.isEmpty(params.eDefinition);
-		} catch (err) {
-			return res.status(200).send({
-				status: 'error',
-				message: 'Faltan datos por enviar !!!',
-			});
+		var PAGE = req.params.page;
+
+		if (!validator.isNumeric(PAGE)) {
+			PAGE = 0;
 		}
 
-		if (validateTitle && validateContent) {
-			// return res.status(200).send({
-			//     message: 'Validacion correcta'
-			// });
-			// Crear el objeto a guardar
-			var articleItem = new entradaModel();
+		var RES_PER_PAGE = 5;
+		var SKIP = 0;
+		var LIMIT = 0;
 
-			// Asignar valores
-			articleItem.title = params.title;
-			articleItem.content = params.content;
+		if (PAGE) {
+			SKIP = RES_PER_PAGE * PAGE - RES_PER_PAGE;
+			LIMIT = RES_PER_PAGE;
+		}
 
-			if (params.image) {
-				articleItem.image = params.image;
-			} else {
-				articleItem.image = null;
-			}
-
-			// Guardar el articulo
-			articleItem.save((err, articleStored) => {
-				if (err || !articleStored) {
-					return res.status(404).send({
+		// Find
+		entryModel
+			.find({})
+			.sort('-id')
+			.skip(SKIP)
+			.limit(LIMIT)
+			.exec((err, entries) => {
+				if (err) {
+					return res.status(500).send({
 						status: 'error',
-						message: 'El artículo no se ha guardado !!!',
+						message: 'Error al devolver las entradas',
 					});
 				}
 
-				// Devolver una respuesta
+				if (!entries || entries.length === 0) {
+					return res.status(404).send({
+						status: 'error',
+						message: 'No hay entradas para mostrar',
+					});
+				}
+
 				return res.status(200).send({
 					status: 'success',
-					articleItem: articleStored,
+					entries,
 				});
 			});
-		} else {
-			return res.status(200).send({
-				status: 'error',
-				message: 'Los datos no son validos !!!',
-			});
-		}
+	},
+
+	// OBTENER UN SOLO ELEMENTO/ENTRADA
+
+	getEntry: (req, res) => {
+		return res.status(200).send({
+			status: 'success',
+			message: 'Un solo elemento',
+		});
 	},
 };
 

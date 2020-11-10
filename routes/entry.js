@@ -11,5 +11,6 @@ const router = express.Router();
 
 // Rutas
 router.post('/save', entryController.save);
+router.get('/entries/:page?', entryController.getEntries);
 
 module.exports = router;
