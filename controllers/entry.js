@@ -8,6 +8,7 @@ const entryModel = require('../models/entry');
 const controller = {
 	// Controladores
 
+	// ----------------------------------------------------------------------------------------
 	// SALVAR UNA ENTRADA DEL DICCIONARIO
 	save: (req, res) => {
 		// Recoger datos
@@ -75,6 +76,7 @@ const controller = {
 		}
 	},
 
+	// ----------------------------------------------------------------------------------------
 	// LISTAR TODAS LAS ENTRADAS DEL DICCIONARIO
 	// SI SE LE PASA UN NUMERO ES UNA PAGINACIÓN
 	getEntries: (req, res) => {
@@ -124,6 +126,7 @@ const controller = {
 			});
 	},
 
+	// ----------------------------------------------------------------------------------------
 	// OBTENER UN SOLO ELEMENTO/ENTRADA
 	getEntry: (req, res) => {
 		// Obtener el id de la entrada de la url
@@ -154,6 +157,7 @@ const controller = {
 		});
 	},
 
+	// ----------------------------------------------------------------------------------------
 	// ACTUALIZAR UN ELEMENTO/ENTRADA
 	update: (req, res) => {
 		// Obtener el id de la entrada de la url
@@ -190,16 +194,22 @@ const controller = {
 		}
 
 		if (validatorEWord && validatorEDefinition) {
-			// Actualizar la entrada (find anda update)
+			// Actualizar la entrada (find and update)
 			entryModel.findOneAndUpdate(
 				{ _id: entryId },
 				params,
 				{ new: true },
 				(err, entryUpdated) => {
-					if (err || !entryUpdated) {
+					if (err) {
+						return res.status(500).send({
+							status: 'error',
+							message: 'Error al actualizar',
+						});
+					}
+					if (!entryUpdated) {
 						return res.status(404).send({
 							status: 'error',
-							message: 'La entrada no se actualizado',
+							message: 'La entrada no se actualizado, posiblemente no exista',
 						});
 					}
 
@@ -216,6 +226,35 @@ const controller = {
 				message: 'Los datos no son válidos',
 			});
 		}
+	},
+
+	// ----------------------------------------------------------------------------------------
+	// BORRAR UN ELEMENTO/ENTRADA
+	delete: (req, res) => {
+		// Obtener el id de la entrada de la url
+		var entryId = req.params.id;
+
+		// Borrar la entrada (find and delete)
+		entryModel.findOneAndDelete({_id: entryId}, (err, entryDeleted) => {
+			if(err) {
+				return res.status(500).send({
+					status: 'error',
+					message: 'Error al borrar',
+				});
+			}
+
+			if(!entryDeleted) {
+				return res.status(404).send({
+					status: 'error',
+					message: 'No se ha borrado la entrada, posiblemente no exista',
+				});
+			}
+
+			return res.status(200).send({
+				status: 'success',
+				entry: entryDeleted,
+			});
+		});
 	},
 };
 
