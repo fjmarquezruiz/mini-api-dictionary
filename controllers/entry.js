@@ -3,7 +3,9 @@
 const validator = require('validator');
 const fs = require('fs');
 const path = require('path');
+const csv = require('fast-csv');
 const entryModel = require('../models/entry');
+const mongoose = require('mongoose');
 
 const controller = {
 	// Controladores
@@ -85,7 +87,7 @@ const controller = {
 
 		var pageNum = req.params.page;
 
-		if (!validator.isNumeric(pageNum)) {
+		if (pageNum < 0 || pageNum == undefined) {
 			pageNum = 0;
 		}
 
@@ -93,7 +95,7 @@ const controller = {
 		var skipEntries = 0;
 		var limitEntries = 0;
 
-		if (pageNum) {
+		if (pageNum > 0) {
 			skipEntries = resPerPage * pageNum - resPerPage;
 			limitEntries = resPerPage;
 		}
@@ -297,6 +299,39 @@ const controller = {
 					entry: entries,
 				});
 			});
+	},
+
+	// ----------------------------------------------------------------------------------------
+	// IMPORTAR CSV
+	import: (req, res) => {
+		var csvFile = './files/csv/Vocabulary - Weather.csv';
+		let csvItems = [];
+
+		csv
+			.parseFile(csvFile, { headers: true })
+			.on('error', (error) => console.error(error))
+			// .on('data', (row) => console.log(`ROW=${JSON.stringify(row)}`))
+			.on('data', (row) => {
+				row['_id'] = new mongoose.Types.ObjectId();
+				csvItems.push(row);
+			})
+			// .on('end', (rowCount) => console.log(`Parsed ${rowCount} rows`));
+			.on('end', () => {
+				entryModel.create(csvItems, (err, documents) => {
+					if (err) throw err;
+
+					return res.status(200).send({
+						status: 'success',
+						message: csvItems.length,
+						documents
+					});
+				});
+
+				
+			});
+
+		console.log(csvItems);
+
 	},
 };
 

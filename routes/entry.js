@@ -16,5 +16,6 @@ router.get('/entry/:id', entryController.getEntry);
 router.put('/entry/:id', entryController.update);
 router.delete('/entry/:id', entryController.delete);
 router.get('/search/:search', entryController.search);
+router.post('/import', entryController.import);
 
 module.exports = router;
